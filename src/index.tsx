@@ -3,6 +3,12 @@ import ReactDOM from "react-dom"
 import "./index.css"
 import { App } from "./App"
 import reportWebVitals from "./reportWebVitals"
+import { init } from "api/fileService/init"
+import { getResults } from "api/fileService/results"
+
+init()
+
+getResults(99, 1).then(console.log)
 
 ReactDOM.render(
   <React.StrictMode>
