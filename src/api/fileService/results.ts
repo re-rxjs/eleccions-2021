@@ -33,7 +33,7 @@ export const getResults = (
     })
     .then((readFiles) => {
       const detalle = readFiles.find((file) => file.name.includes("DETALLE"))!
-      const resumen = readFiles.find((file) => file.name.includes("DETALLE"))!
+      const resumen = readFiles.find((file) => file.name.includes("RESUMEN"))!
 
       return {
         detail: splitCSV(detalle.text).map((row) => {
@@ -41,7 +41,7 @@ export const getResults = (
             CodigoComunidad,
             CodigoCircumscripcion,
             CodigoMunicipio,
-            TypeAmbit,
+            TypeAmbito,
             CodigoPartido,
             PercentVots,
             Vots,
@@ -51,7 +51,7 @@ export const getResults = (
             CodigoComunidad,
             CodigoCircumscripcion,
             CodigoMunicipio,
-            TypeAmbit,
+            TypeAmbito,
             CodigoPartido,
             PercentVots,
             Vots,
@@ -98,3 +98,7 @@ export const getResults = (
         }),
       }
     })
+
+export type Results = ReturnType<typeof getResults> extends Promise<infer R>
+  ? R
+  : never

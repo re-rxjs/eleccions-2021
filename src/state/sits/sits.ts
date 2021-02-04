@@ -5,7 +5,7 @@ import { participation$, Participation } from "api/participation"
 import { PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
-import { dhondt } from "./dhondt"
+import { dhondt } from "../../utils/dhondt"
 
 interface PartyResults {
   votes: number
