@@ -1,5 +1,5 @@
 import { bind } from "@react-rxjs/core"
-import { Observable } from "rxjs"
+import { Observable, of } from "rxjs"
 import { map, pluck } from "rxjs/operators"
 import { Provinces } from "./provinces"
 
@@ -8,9 +8,24 @@ export interface Participation {
   nNonVoters: number
 }
 
-export const participation$: Observable<
-  Record<Provinces, Participation>
-> = new Observable()
+export const participation$: Observable<Record<Provinces, Participation>> = of({
+  [Provinces.BCN]: {
+    nVoters: 3296800,
+    nNonVoters: 859509,
+  },
+  [Provinces.GIR]: {
+    nVoters: 409966,
+    nNonVoters: 107919,
+  },
+  [Provinces.LLE]: {
+    nVoters: 242057,
+    nNonVoters: 71861,
+  },
+  [Provinces.TAR]: {
+    nVoters: 444068,
+    nNonVoters: 122275,
+  },
+})
 
 export const [useParticipation, getParticipation$] = bind(
   (province?: Provinces) =>
