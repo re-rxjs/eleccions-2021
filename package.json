@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@react-rxjs/core": "^0.6.4",
+    "@react-rxjs/utils": "^0.4.0",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
@@ -13,14 +15,21 @@
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.1",
+    "rxjs": "^6.6.3",
     "typescript": "^4.0.3",
     "web-vitals": "^0.2.4"
   },
   "scripts": {
+    "format": "prettier --write README.md \"src/**/*.{js,jsx,ts,tsx,json,md}\"",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "trailingComma": "all",
+    "semi": false
   },
   "eslintConfig": {
     "extends": [
@@ -39,5 +48,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
   }
 }
