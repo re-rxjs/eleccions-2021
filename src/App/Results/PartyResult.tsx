@@ -6,22 +6,27 @@ export const PartyResult: React.FC<{
   votes: number
   percent: number
 }> = ({ party, sits, votes, percent }) => (
-  <div className="foo">
-    <div className="foo" style={{ backgroundColor: party.color }}>
+  <li className="flex items-center my-2">
+    <div
+      className="flex-grow-0 text-center text-white pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl"
+      style={{ backgroundColor: party.color }}
+    >
       {sits}
     </div>
-    <div className="foo">
-      <span className="asdf">{party.name}</span>
-      <div className="asdf">
+    <div className="flex-grow flex flex-col h-14 justify-between">
+      <div className="pl-2 antialiased font-medium flex-grow-0">
+        {party.name}
+      </div>
+      <div className="bg-gray-100 h-1 flex-grow-0">
         <div
-          className="asdf"
+          className="h-1"
           style={{ backgroundColor: party.color, width: percent + "%" }}
         ></div>
       </div>
-      <div className="asdf">
-        <span className="asdf">{votes}</span>
-        <span className="asdf">- {percent}%</span>
+      <div className="pl-2 flex justify-between text-sm text-gray-600 flex-grow-0 pb-1">
+        <span className="">{votes}</span>
+        <span className="">{percent}%</span>
       </div>
     </div>
-  </div>
+  </li>
 )
