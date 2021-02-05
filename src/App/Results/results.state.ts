@@ -20,7 +20,6 @@ export interface Results extends Omit<Votes, "parties"> {
 const add = (a: number, b: number) => a + b
 
 const getProvinceResults = (votes: Votes, province: Provinces): Results => {
-  console.log(province, votes.white)
   const validVotes = votes.white + Object.values(votes.parties).reduce(add)
   const parties: Record<string, PartyResults> = {}
   const partiesData = getParties()
