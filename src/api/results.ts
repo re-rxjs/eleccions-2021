@@ -74,7 +74,7 @@ const partyCodes: Record<PartyId, number> = {
   [PartyId.Junts]: 1016,
   [PartyId.Vox]: 0,
   [PartyId.PNC]: 0,
-  [PartyId.Primaries]: 0,
+  [PartyId.Primaries]: 648, // using this party as if it was PACMA for now
   [PartyId.RecortesZero_UCE]: 1009,
   [PartyId.PCTC]: 0,
   [PartyId.FNC]: 0,

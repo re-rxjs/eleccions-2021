@@ -1,3 +1,9 @@
+import { Results } from "./Results"
+
 export function App() {
-  return <>Coming soon...</>
+  return (
+    <div className="asdf">
+      <Results />
+    </div>
+  )
 }
