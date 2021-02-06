@@ -54,8 +54,11 @@ export const PartyResult: React.FC<{
         </div>
         <div className="border-2 border-gray-700 border-l-0 -ml-0.5 rounded-r-md bg-gray-300 h-1 box-content flex-grow-0 relative">
           <div
-            className="h-1"
-            style={{ backgroundColor: party.color, width: percent * 100 + "%" }}
+            style={{
+              height: "4px",
+              backgroundColor: party.color,
+              width: percent * 100 + "%",
+            }}
           ></div>
           <input
             type="range"
