@@ -1,12 +1,11 @@
 import { Subscribe } from "@react-rxjs/core"
-import { Provinces } from "api/provinces"
 import { PartyResult } from "./PartyResult"
 import { useResults, getResults$, PartyResults } from "./results.state"
 
 const sortPartyResults = (a: PartyResults, b: PartyResults) => b.votes - a.votes
 
-const Parties: React.FC<{ province?: Provinces }> = ({ province }) => {
-  const results = useResults(province)
+const Parties: React.FC = () => {
+  const results = useResults()
   return (
     <ul className="foo px-3">
       {Object.values(results.parties)
@@ -18,10 +17,10 @@ const Parties: React.FC<{ province?: Provinces }> = ({ province }) => {
   )
 }
 
-export const Results: React.FC<{ province?: Provinces }> = ({ province }) => {
+export const Results: React.FC = () => {
   return (
-    <Subscribe source$={getResults$(province)}>
-      <Parties province={province} />
+    <Subscribe source$={getResults$}>
+      <Parties />
     </Subscribe>
   )
 }

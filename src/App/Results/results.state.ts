@@ -1,10 +1,11 @@
-import { map, pluck, shareReplay } from "rxjs/operators"
+import { map, pluck, shareReplay, switchMap } from "rxjs/operators"
 import { recordEntries, recordFromEntries } from "utils/record-utils"
 import { getParties, Party, PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
 import { dhondt } from "utils/dhondt"
 import { bind } from "@react-rxjs/core"
+import { selectedProvince$ } from "App/AreaPicker"
 
 export interface PartyResults {
   party: Party
@@ -91,6 +92,10 @@ const mergeResults = (results: Record<Provinces, Results>) => {
 
 const catResults$ = results$.pipe(map(mergeResults), shareReplay(1))
 
-export const [useResults, getResults$] = bind((province?: Provinces) =>
-  province ? results$.pipe(pluck(province)) : catResults$,
+export const [useResults, getResults$] = bind(
+  selectedProvince$.pipe(
+    switchMap((province: Provinces | null) =>
+      province ? results$.pipe(pluck(province)) : catResults$,
+    ),
+  ),
 )
