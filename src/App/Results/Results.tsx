@@ -1,6 +1,7 @@
 import { Subscribe } from "@react-rxjs/core"
+import { AreaPicker } from "./AreaPicker"
 import { PartyResult } from "./PartyResult"
-import { useResults, getResults$, PartyResults } from "./results.state"
+import { getResults$, PartyResults, useResults } from "./results.state"
 
 const sortPartyResults = (a: PartyResults, b: PartyResults) => b.votes - a.votes
 
@@ -20,6 +21,7 @@ const Parties: React.FC = () => {
 export const Results: React.FC = () => {
   return (
     <Subscribe source$={getResults$}>
+      <AreaPicker />
       <Parties />
     </Subscribe>
   )

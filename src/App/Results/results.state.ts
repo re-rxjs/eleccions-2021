@@ -5,7 +5,7 @@ import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
 import { dhondt } from "utils/dhondt"
 import { bind } from "@react-rxjs/core"
-import { selectedProvince$ } from "App/AreaPicker"
+import { selectedProvince$ } from "./AreaPicker"
 
 export interface PartyResults {
   party: Party

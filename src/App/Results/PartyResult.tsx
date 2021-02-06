@@ -1,27 +1,7 @@
 import { Party } from "api/parties"
 import { formatNumber, formatPercent } from "utils/formatters"
-
-const isContrastDark = (hexcolor: string) => {
-  if (hexcolor[0] === "#") {
-    hexcolor = hexcolor.slice(1)
-  }
-
-  if (hexcolor.length === 3) {
-    hexcolor = hexcolor
-      .split("")
-      .map(function (hex) {
-        return hex + hex
-      })
-      .join("")
-  }
-
-  var r = parseInt(hexcolor.substr(0, 2), 16)
-  var g = parseInt(hexcolor.substr(2, 2), 16)
-  var b = parseInt(hexcolor.substr(4, 2), 16)
-
-  var yiq = (r * 299 + g * 587 + b * 114) / 1000
-  return yiq >= 128
-}
+import { Link } from "react-router-dom"
+import { getTextColor } from "utils/color"
 
 export const PartyResult: React.FC<{
   party: Party
@@ -40,14 +20,15 @@ export const PartyResult: React.FC<{
 }) => {
   return (
     <li className="flex items-center my-2">
-      <div
-        className={`border-2 border-gray-700 flex-grow-0 text-center ${
-          isContrastDark(party.color) ? "text-gray-900" : "text-gray-100"
-        } h-14 w-14 rounded-full font-bold text-xl flex`}
+      <Link
+        className={`border-2 border-gray-700 flex-grow-0 text-center ${getTextColor(
+          party.color,
+        )} h-14 w-14 rounded-full font-bold text-xl flex`}
         style={{ backgroundColor: party.color }}
+        to={`/party/${party.id}`}
       >
         <span className="m-auto">{sits}</span>
-      </div>
+      </Link>
       <div className="flex-grow flex flex-col h-14 justify-between">
         <div className="pl-2 antialiased font-medium flex-grow-0 ">
           {party.name}
