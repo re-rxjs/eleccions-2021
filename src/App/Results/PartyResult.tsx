@@ -38,12 +38,12 @@ export const PartyResult: React.FC<{
   editting,
   onEdit = Function.prototype,
 }) => {
-  const contrastColor = isContrastDark(party.color) ? "gray-900" : "gray-100"
-
   return (
     <li className="flex items-center my-2">
       <div
-        className={`border-2 border-gray-700 flex-grow-0 text-center text-${contrastColor} pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl`}
+        className={`border-2 border-gray-700 flex-grow-0 text-center ${
+          isContrastDark(party.color) ? "text-gray-900" : "text-gray-100"
+        } pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl`}
         style={{ backgroundColor: party.color }}
       >
         {sits}
