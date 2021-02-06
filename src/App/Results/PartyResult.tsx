@@ -1,6 +1,28 @@
 import { Party } from "api/parties"
 import { formatNumber, formatPercent } from "utils/formatters"
 
+const isContrastDark = (hexcolor: string) => {
+  if (hexcolor[0] === "#") {
+    hexcolor = hexcolor.slice(1)
+  }
+
+  if (hexcolor.length === 3) {
+    hexcolor = hexcolor
+      .split("")
+      .map(function (hex) {
+        return hex + hex
+      })
+      .join("")
+  }
+
+  var r = parseInt(hexcolor.substr(0, 2), 16)
+  var g = parseInt(hexcolor.substr(2, 2), 16)
+  var b = parseInt(hexcolor.substr(4, 2), 16)
+
+  var yiq = (r * 299 + g * 587 + b * 114) / 1000
+  return yiq >= 128
+}
+
 export const PartyResult: React.FC<{
   party: Party
   sits: number
@@ -16,19 +38,21 @@ export const PartyResult: React.FC<{
   editting,
   onEdit = Function.prototype,
 }) => {
+  const contrastColor = isContrastDark(party.color) ? "gray-900" : "gray-100"
+
   return (
     <li className="flex items-center my-2">
       <div
-        className="flex-grow-0 text-center text-white pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl"
+        className={`border-2 border-gray-700 flex-grow-0 text-center text-${contrastColor} pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl`}
         style={{ backgroundColor: party.color }}
       >
         {sits}
       </div>
       <div className="flex-grow flex flex-col h-14 justify-between">
-        <div className="pl-2 antialiased font-medium flex-grow-0">
+        <div className="pl-2 antialiased font-medium flex-grow-0 ">
           {party.name}
         </div>
-        <div className="bg-gray-100 h-1 flex-grow-0 relative">
+        <div className="border-2 border-gray-700 border-l-0 -ml-0.5 rounded-r-md bg-gray-300 h-1 box-content flex-grow-0 relative">
           <div
             className="h-1"
             style={{ backgroundColor: party.color, width: percent * 100 + "%" }}
