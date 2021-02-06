@@ -43,10 +43,10 @@ export const PartyResult: React.FC<{
       <div
         className={`border-2 border-gray-700 flex-grow-0 text-center ${
           isContrastDark(party.color) ? "text-gray-900" : "text-gray-100"
-        } pt-3.5 h-14 w-14 inline-block rounded-full font-bold text-xl`}
+        } h-14 w-14 rounded-full font-bold text-xl flex`}
         style={{ backgroundColor: party.color }}
       >
-        {sits}
+        <span className="m-auto">{sits}</span>
       </div>
       <div className="flex-grow flex flex-col h-14 justify-between">
         <div className="pl-2 antialiased font-medium flex-grow-0 ">
