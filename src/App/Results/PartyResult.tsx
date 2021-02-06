@@ -54,7 +54,7 @@ export const PartyResult: React.FC<{
         </div>
         <div className="border-2 border-gray-700 border-l-0 -ml-0.5 rounded-r-md bg-gray-300 h-1 box-content flex-grow-0 relative">
           <div
-            className="absolute h-full top-0"
+            className="absolute h-full -top-0.5 border-l-0 border-r-0 border-2 border-gray-700 box-content"
             style={{
               backgroundColor: party.color,
               width: percent * 100 + "%",
