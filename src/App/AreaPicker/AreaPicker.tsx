@@ -26,11 +26,11 @@ const [useIsSelected] = bind(
 const ProvinceButton: FC<{ province: Provinces | null }> = ({ province }) => {
   const isSelected = useIsSelected(province)
 
-  const bgShade = isSelected ? 400 : 200
-
   return (
     <div
-      className={`text-center p-2 rounded font-bold bg-indigo-${bgShade} cursor-pointer`}
+      className={`text-center p-2 rounded font-bold ${
+        isSelected ? "bg-indigo-400" : "bg-indigo-200"
+      } cursor-pointer`}
       onClick={() => changeProvince(province)}
     >
       {province || "Catalunya"}
