@@ -27,7 +27,7 @@ const getProvinceResults = (votes: Votes, province: Provinces): Results => {
     parties[party] = {
       party: partiesData[party],
       votes,
-      percent: Math.round((votes / validVotes) * 10000) / 100,
+      percent: votes / validVotes,
       sits: 0,
     }
   })
@@ -83,7 +83,7 @@ const mergeResults = (results: Record<Provinces, Results>) => {
       .reduce(add)
 
   Object.values(result.parties).forEach((party) => {
-    party.percent = Math.round((party.votes / validVotes) * 10000) / 100
+    party.percent = party.votes / validVotes
   })
 
   return result

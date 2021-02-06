@@ -1,4 +1,5 @@
 import { Party } from "api/parties"
+import { formatNumber, formatPercent } from "utils/formatters"
 
 export const PartyResult: React.FC<{
   party: Party
@@ -30,7 +31,7 @@ export const PartyResult: React.FC<{
         <div className="bg-gray-100 h-1 flex-grow-0 relative">
           <div
             className="h-1"
-            style={{ backgroundColor: party.color, width: percent + "%" }}
+            style={{ backgroundColor: party.color, width: percent * 100 + "%" }}
           ></div>
           <input
             type="range"
@@ -40,13 +41,13 @@ export const PartyResult: React.FC<{
             style={{ cursor: "col-resize" }}
             min="0"
             max="10000"
-            value={percent * 100}
-            onChange={(e) => onEdit(Number(e.target.value) / 100)}
+            value={percent * 10000}
+            onChange={(e) => onEdit(Number(e.target.value))}
           />
         </div>
         <div className="pl-2 flex justify-between text-sm text-gray-600 flex-grow-0 pb-1">
-          <span className="">{votes}</span>
-          <span className="">{percent}%</span>
+          <span className="">{formatNumber(votes)}</span>
+          <span className="">{formatPercent(percent)}</span>
         </div>
       </div>
     </li>
