@@ -11,6 +11,7 @@ import { Logo } from "./Logo"
 import { partyResult$, usePartyResult } from "./party.state"
 import { Subscribe } from "@react-rxjs/core"
 import { PartyResult } from "App/Results/PartyResult"
+import { BackArrow } from "./BackArrow"
 
 const PartyPage: FC = () => {
   const match = useParams<{ id: PartyId }>()
@@ -20,21 +21,23 @@ const PartyPage: FC = () => {
   const backBtn =
     history.action === "PUSH" ? (
       <div className="cursor-pointer" onClick={history.goBack}>
-        🡸
+        <BackArrow />
       </div>
     ) : (
-      <Link to="/">🡸</Link>
+      <Link to="/">
+        <BackArrow />
+      </Link>
     )
 
   return (
     <div
-      className={`${getTextColor(
-        party.color,
-      )} h-screen overflow-hidden flex flex-col`}
+      className={`h-screen overflow-hidden flex flex-col`}
       style={{ backgroundColor: party.color }}
     >
       <div
-        className={`p-2 flex gap-2 text-lg font-bold border-b border-current`}
+        className={`p-2 flex gap-2 items-center text-lg font-bold border-b border-current ${getTextColor(
+          party.color,
+        )}`}
       >
         {backBtn}
         <div>{party.name}</div>
