@@ -8,6 +8,7 @@ export const PartyResult: React.FC<{
   sits: number
   votes: number
   percent: number
+  linkToParty?: boolean
   editting?: boolean
   onEdit?: (value: number) => void
 }> = ({
@@ -15,20 +16,26 @@ export const PartyResult: React.FC<{
   sits,
   votes,
   percent,
+  linkToParty,
   editting,
   onEdit = Function.prototype,
 }) => {
+  const sitsElementProps = {
+    className: `border-2 border-gray-700 flex-grow-0 text-center ${getTextColor(
+      party.color,
+    )} h-14 w-14 rounded-full font-bold text-xl flex`,
+    style: { backgroundColor: party.color },
+    children: <span className="m-auto">{sits}</span>,
+  }
+
+  const sitsElement = linkToParty ? (
+    <Link {...sitsElementProps} to={`/party/${party.id}`} />
+  ) : (
+    <div {...sitsElementProps} />
+  )
   return (
     <li className="flex items-center my-2">
-      <Link
-        className={`border-2 border-gray-700 flex-grow-0 text-center ${getTextColor(
-          party.color,
-        )} h-14 w-14 rounded-full font-bold text-xl flex`}
-        style={{ backgroundColor: party.color }}
-        to={`/party/${party.id}`}
-      >
-        <span className="m-auto">{sits}</span>
-      </Link>
+      {sitsElement}
       <div className="flex-grow flex flex-col h-14 justify-between">
         <div className="pl-2 antialiased font-medium flex-grow-0 ">
           {party.name}

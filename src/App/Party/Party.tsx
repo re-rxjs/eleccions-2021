@@ -1,15 +1,21 @@
 import { getParties, PartyId } from "api/parties"
+import { Provinces } from "api/provinces"
+import { location$ } from "App/history"
 import { FC } from "react"
 import { useHistory, useParams } from "react-router"
-import { Link } from "react-router-dom"
+import { Link, matchPath } from "react-router-dom"
+import { filter, map, switchMap } from "rxjs/operators"
+import { merge } from "rxjs"
 import { getTextColor } from "utils/color"
 import { Logo } from "./Logo"
+import { partyResult$, usePartyResult } from "./party.state"
+import { Subscribe } from "@react-rxjs/core"
+import { PartyResult } from "App/Results/PartyResult"
 
-export const Party: FC = () => {
+const PartyPage: FC = () => {
   const match = useParams<{ id: PartyId }>()
   const party = getParties()[match.id]
   const history = useHistory()
-  console.log({ history })
 
   const backBtn =
     history.action === "PUSH" ? (
@@ -22,17 +28,70 @@ export const Party: FC = () => {
 
   return (
     <div
-      className={`${getTextColor(party.color)} min-h-screen `}
+      className={`${getTextColor(
+        party.color,
+      )} h-screen overflow-hidden flex flex-col`}
       style={{ backgroundColor: party.color }}
     >
-      <div className={`p-2 flex gap-2`}>
+      <div
+        className={`p-2 flex gap-2 text-lg font-bold border-b border-current`}
+      >
         {backBtn}
         <div>{party.name}</div>
       </div>
-      <Logo
-        party={match.id}
-        className="max-w-full max-h-40 bg-white p-2 rounded-xl m-auto"
-      />
+      <div className="p-2 overflow-auto flex gap-1 flex-col">
+        <Logo
+          party={match.id}
+          className="max-w-full h-40 min-w-40 bg-white p-2 rounded-xl m-auto mb-2"
+        />
+        <ProvinceResult province={null} party={match.id} />
+        <div className="grid grid-cols-2 gap-1">
+          <ProvinceResult province={Provinces.BCN} party={match.id} />
+          <ProvinceResult province={Provinces.GIR} party={match.id} />
+          <ProvinceResult province={Provinces.LLE} party={match.id} />
+          <ProvinceResult province={Provinces.TAR} party={match.id} />
+        </div>
+      </div>
     </div>
   )
 }
+
+const ProvinceResult: FC<{ province: Provinces | null; party: PartyId }> = ({
+  province,
+  party,
+}) => {
+  const result = usePartyResult(party, province)
+
+  return (
+    <div className="bg-white rounded px-2 py-1">
+      <div className="text-center border-b border-current font-bold">
+        {province === null ? "Catalunya" : province}
+      </div>
+      <PartyResult {...result} />
+    </div>
+  )
+}
+
+const selectedParty$ = location$.pipe(
+  map((location) => {
+    const match = matchPath<{ id: PartyId }>(location.pathname, "/party/:id")
+    return match?.params.id!
+  }),
+  filter((v) => v !== undefined),
+)
+const partyPage$ = selectedParty$.pipe(
+  switchMap((party) =>
+    merge(
+      partyResult$(party, null),
+      ...Object.values(Provinces).map((province) =>
+        partyResult$(party, province),
+      ),
+    ),
+  ),
+)
+
+export const Party = () => (
+  <Subscribe source$={partyPage$}>
+    <PartyPage />
+  </Subscribe>
+)

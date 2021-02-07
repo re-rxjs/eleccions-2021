@@ -1,18 +1,26 @@
 import { Subscribe } from "@react-rxjs/core"
 import { AreaPicker } from "./AreaPicker"
 import { PartyResult } from "./PartyResult"
-import { getResults$, PartyResults, useResults } from "./results.state"
+import {
+  selectedProvinceResults$,
+  PartyResults,
+  useSelectedProvinceResults,
+} from "./results.state"
 
 const sortPartyResults = (a: PartyResults, b: PartyResults) => b.votes - a.votes
 
 const Parties: React.FC = () => {
-  const results = useResults()
+  const results = useSelectedProvinceResults()
   return (
     <ul className="foo px-3">
       {Object.values(results.parties)
         .sort(sortPartyResults)
         .map((partyResult) => (
-          <PartyResult key={partyResult.party.id} {...partyResult} />
+          <PartyResult
+            key={partyResult.party.id}
+            {...partyResult}
+            linkToParty
+          />
         ))}
     </ul>
   )
@@ -20,7 +28,7 @@ const Parties: React.FC = () => {
 
 export const Results: React.FC = () => {
   return (
-    <Subscribe source$={getResults$}>
+    <Subscribe source$={selectedProvinceResults$}>
       <AreaPicker />
       <Parties />
     </Subscribe>

@@ -92,10 +92,12 @@ const mergeResults = (results: Record<Provinces, Results>) => {
 
 const catResults$ = results$.pipe(map(mergeResults), shareReplay(1))
 
-export const [useResults, getResults$] = bind(
+export const [useResults, getResults$] = bind((province: Provinces | null) =>
+  province ? results$.pipe(pluck(province)) : catResults$,
+)
+
+export const [useSelectedProvinceResults, selectedProvinceResults$] = bind(
   selectedProvince$.pipe(
-    switchMap((province: Provinces | null) =>
-      province ? results$.pipe(pluck(province)) : catResults$,
-    ),
+    switchMap((province: Provinces | null) => getResults$(province)),
   ),
 )
