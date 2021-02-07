@@ -1,11 +1,12 @@
-import { map, pluck, shareReplay, switchMap } from "rxjs/operators"
-import { recordEntries, recordFromEntries } from "utils/record-utils"
-import { getParties, Party, PartyId } from "api/parties"
+import { map, pluck, switchMap } from "rxjs/operators"
+import { mapRecord, recordEntries } from "utils/record-utils"
+import { Party, PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
 import { dhondt } from "utils/dhondt"
-import { bind } from "@react-rxjs/core"
+import { bind, shareLatest } from "@react-rxjs/core"
 import { selectedProvince$ } from "./AreaPicker"
+import { add } from "utils/add"
 
 export interface PartyResults {
   party: Party
@@ -18,25 +19,15 @@ export interface Results extends Omit<Votes, "parties"> {
   parties: Record<PartyId, PartyResults>
 }
 
-const add = (a: number, b: number) => a + b
-
 const getProvinceResults = (votes: Votes, province: Provinces): Results => {
-  const validVotes = votes.white + Object.values(votes.parties).reduce(add)
-  const parties: Record<string, PartyResults> = {}
-  const partiesData = getParties()
-  recordEntries(votes.parties).forEach(([party, votes]) => {
-    parties[party] = {
-      party: partiesData[party],
-      votes,
-      percent: votes / validVotes,
-      sits: 0,
-    }
-  })
+  const validVotes = votes.white + votes.partyVotes
 
   const nSits = sitsByProvince[province]
   const threshold = Math.round(validVotes * 0.03)
-  dhondt(votes.parties, nSits, threshold).forEach(([party]) => {
-    parties[party].sits++
+
+  const parties = mapRecord(votes.parties, (x) => ({ ...x, sits: 0 }))
+  dhondt(parties, nSits, threshold).forEach(([party]) => {
+    parties[party as PartyId].sits++
   })
 
   return {
@@ -45,19 +36,13 @@ const getProvinceResults = (votes: Votes, province: Provinces): Results => {
   }
 }
 
-const results$ = votes$.pipe(
-  map((votes) =>
-    recordFromEntries(
-      Object.values(Provinces).map((province) => [
-        province,
-        getProvinceResults(votes[province], province),
-      ]),
-    ),
-  ),
-  shareReplay(1),
+export const results$ = votes$.pipe(
+  map((votes) => mapRecord(votes, getProvinceResults)),
+  shareLatest(),
 )
+results$.subscribe()
 
-const mergeResults = (results: Record<Provinces, Results>) => {
+export const mergeResults = (results: Record<Provinces, Results>) => {
   const result = Object.values(results).reduce(
     (acc, current) => {
       acc.nil += current.nil
@@ -90,7 +75,8 @@ const mergeResults = (results: Record<Provinces, Results>) => {
   return result
 }
 
-const catResults$ = results$.pipe(map(mergeResults), shareReplay(1))
+const catResults$ = results$.pipe(map(mergeResults), shareLatest())
+catResults$.subscribe()
 
 export const [useResults, getResults$] = bind((province: Provinces | null) =>
   province ? results$.pipe(pluck(province)) : catResults$,

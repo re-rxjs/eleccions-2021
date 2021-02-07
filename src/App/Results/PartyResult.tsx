@@ -3,6 +3,8 @@ import { formatNumber, formatPercent } from "utils/formatters"
 import { Link } from "react-router-dom"
 import { getTextColor } from "utils/color"
 
+const MAX_INPUT = 10_000
+
 export const PartyResult: React.FC<{
   party: Party
   sits: number
@@ -55,9 +57,9 @@ export const PartyResult: React.FC<{
             }`}
             style={{ cursor: "col-resize" }}
             min="0"
-            max="10000"
-            value={percent * 10000}
-            onChange={(e) => onEdit(Number(e.target.value))}
+            max={MAX_INPUT}
+            value={percent * MAX_INPUT}
+            onChange={(e) => onEdit(Number(e.target.value) / MAX_INPUT)}
           />
         </div>
         <div className="pl-2 flex justify-between text-sm text-gray-600 flex-grow-0 pb-1">
