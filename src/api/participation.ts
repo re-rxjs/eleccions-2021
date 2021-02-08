@@ -21,7 +21,7 @@ export const participation$: Observable<
       ] => [
         province,
         {
-          nVoters: Number(result.Participacio),
+          nVoters: Number(result.Participacio) * 1.5, // TODO: remove this is for testing
           nNonVoters: Number(result.Abstencio) + Number(result.Participacio),
         },
       ]),

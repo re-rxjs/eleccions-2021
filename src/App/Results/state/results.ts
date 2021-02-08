@@ -1,11 +1,10 @@
-import { map, pluck, switchMap } from "rxjs/operators"
+import { map } from "rxjs/operators"
 import { mapRecord, recordEntries } from "utils/record-utils"
 import { Party, PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
 import { dhondt } from "utils/dhondt"
-import { bind, shareLatest } from "@react-rxjs/core"
-import { selectedProvince$ } from "./AreaPicker"
+import { shareLatest } from "@react-rxjs/core"
 import { add } from "utils/add"
 
 export interface PartyResults {
@@ -35,12 +34,6 @@ const getProvinceResults = (votes: Votes, province: Provinces): Results => {
     parties,
   }
 }
-
-export const results$ = votes$.pipe(
-  map((votes) => mapRecord(votes, getProvinceResults)),
-  shareLatest(),
-)
-results$.subscribe()
 
 export const mergeResults = (results: Record<Provinces, Results>) => {
   const result = Object.values(results).reduce(
@@ -75,15 +68,14 @@ export const mergeResults = (results: Record<Provinces, Results>) => {
   return result
 }
 
+const results$ = votes$.pipe(
+  map((votes) => mapRecord(votes, getProvinceResults)),
+  shareLatest(),
+)
+results$.subscribe()
+
 const catResults$ = results$.pipe(map(mergeResults), shareLatest())
 catResults$.subscribe()
 
-export const [useResults, getResults$] = bind((province: Provinces | null) =>
-  province ? results$.pipe(pluck(province)) : catResults$,
-)
-
-export const [useSelectedProvinceResults, selectedProvinceResults$] = bind(
-  selectedProvince$.pipe(
-    switchMap((province: Provinces | null) => getResults$(province)),
-  ),
-)
+export const getResultsByProvince = (province: Provinces | null) =>
+  province ? results$.pipe(map((res) => res[province])) : catResults$

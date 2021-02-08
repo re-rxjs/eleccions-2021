@@ -3,7 +3,7 @@ import { formatNumber, formatPercent } from "utils/formatters"
 import { Link } from "react-router-dom"
 import { getTextColor } from "utils/color"
 
-const MAX_INPUT = 10_000
+// const MAX_INPUT = 10_000
 
 export const PartyResult: React.FC<{
   party: Party
@@ -11,17 +11,7 @@ export const PartyResult: React.FC<{
   votes: number
   percent: number
   linkToParty?: boolean
-  editting?: boolean
-  onEdit?: (value: number) => void
-}> = ({
-  party,
-  sits,
-  votes,
-  percent,
-  linkToParty,
-  editting,
-  onEdit = Function.prototype,
-}) => {
+}> = ({ party, sits, votes, percent, linkToParty }) => {
   const sitsElementProps = {
     className: `border-2 border-gray-700 flex-grow-0 text-center ${getTextColor(
       party.color,
@@ -36,7 +26,7 @@ export const PartyResult: React.FC<{
     <div {...sitsElementProps} />
   )
   return (
-    <li className="flex items-center my-2">
+    <div className="flex-grow flex items-center my-2">
       {sitsElement}
       <div className="flex-grow flex flex-col h-14 justify-between">
         <div className="pl-2 antialiased font-medium flex-grow-0 ">
@@ -50,6 +40,7 @@ export const PartyResult: React.FC<{
               width: percent * 100 + "%",
             }}
           ></div>
+          {/*
           <input
             type="range"
             className={`absolute w-full h-full appearance-none bg-transparent top-0 outline-none${
@@ -61,12 +52,13 @@ export const PartyResult: React.FC<{
             value={percent * MAX_INPUT}
             onChange={(e) => onEdit(Number(e.target.value) / MAX_INPUT)}
           />
+          */}
         </div>
         <div className="pl-2 flex justify-between text-sm text-gray-600 flex-grow-0 pb-1">
           <span className="">{formatNumber(votes)}</span>
           <span className="">{formatPercent(percent)}</span>
         </div>
       </div>
-    </li>
+    </div>
   )
 }

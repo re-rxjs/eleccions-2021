@@ -1,22 +1,35 @@
-import { shareLatest } from "@react-rxjs/core"
-import { createListener, mergeWithKey, selfDependant } from "@react-rxjs/utils"
+import { bind, shareLatest } from "@react-rxjs/core"
+import { createListener, selfDependant } from "@react-rxjs/utils"
 import { Participation, participation$ } from "api/participation"
 import { Party, PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
-import { selectedProvince$ } from "./AreaPicker"
-import { EMPTY, merge, Observable, race } from "rxjs"
+import { selectedProvince$ } from "../AreaPicker"
 import {
+  combineLatest,
+  concat,
+  EMPTY,
+  merge,
+  NEVER,
+  Observable,
+  race,
+} from "rxjs"
+import {
+  filter,
   map,
   publish,
+  scan,
+  startWith,
   switchMap,
+  switchMapTo,
   takeUntil,
   withLatestFrom,
 } from "rxjs/operators"
 import { add } from "utils/add"
 import { dhondt } from "utils/dhondt"
-import { mapRecord } from "utils/record-utils"
-import { mergeResults } from "./results.state"
+import { mapRecord, recordFromEntries } from "utils/record-utils"
+import { mergeResults } from "./results"
+import { isResults$ } from "App/ResultsOrPrediction"
 
 const [predictionInput$, onPredictionChange] = createListener(
   (partyId: PartyId, percent: number) => ({
@@ -24,26 +37,53 @@ const [predictionInput$, onPredictionChange] = createListener(
     percent,
   }),
 )
+export { onPredictionChange }
 
-const [toggleLock$, onToggleLock$] = createListener<PartyId>()
+const [toggleLock$, onToggleLock] = createListener<PartyId>()
+export { onToggleLock }
 
 const withDefaultStream$ = <T, TT>(default$: Observable<T>) =>
   publish((source$: Observable<TT>) =>
     race([source$, merge(default$.pipe(takeUntil(source$)), source$)]),
   )
 
+const initialLocks = recordFromEntries(
+  Object.values(Provinces).map((p) => [p, new Set<PartyId>()]),
+)
 const locks$ = selectedProvince$.pipe(
   switchMap((province) =>
     province
       ? toggleLock$.pipe(map((partyId) => ({ partyId, province })))
       : EMPTY,
   ),
+  scan((acc, { province, partyId }) => {
+    const nextSet = new Set(acc[province])
+    if (nextSet.has(partyId)) nextSet.delete(partyId)
+    else nextSet.add(partyId)
+    return {
+      ...acc,
+      [province]: nextSet,
+    }
+  }, initialLocks),
+  startWith(initialLocks),
+  shareLatest(),
+)
+
+export const [useIsLocked] = bind(
+  (partyId: PartyId) =>
+    selectedProvince$.pipe(
+      switchMap((province) =>
+        locks$.pipe(map((l) => (province ? l[province].has(partyId) : false))),
+      ),
+    ),
+  false,
 )
 
 const values$ = selectedProvince$.pipe(
   switchMap((province) =>
     province
       ? predictionInput$.pipe(
+          filter((x) => !Number.isNaN(x)),
           map((prediction) => ({ ...prediction, province })),
         )
       : EMPTY,
@@ -51,32 +91,14 @@ const values$ = selectedProvince$.pipe(
 )
 
 const [_predictions$, connectPredictions] = selfDependant<
-  Record<
-    Provinces,
-    Record<PartyId, { party: Party; percent: number; isLock?: boolean }>
-  >
+  Record<Provinces, Record<PartyId, { party: Party; percent: number }>>
 >()
 
-const prediction$ = mergeWithKey({
-  lock: locks$,
-  value: values$,
-}).pipe(
-  withLatestFrom(_predictions$),
-  map(([event, prev]) => {
-    const { province, partyId } = event.payload
+const prediction$ = values$.pipe(
+  withLatestFrom(_predictions$, locks$),
+  map(([{ province, partyId, percent: rawValue }, prev, locks]) => {
     const provinceData = prev[province]
     const partyData = { ...prev[province][partyId] }
-    if (event.type === "lock") {
-      partyData.isLock = !partyData.isLock
-      return {
-        ...prev,
-        [province]: {
-          ...provinceData,
-          [partyId]: partyData,
-        },
-      }
-    }
-    const rawValue = event.payload.percent
 
     const lockedParties: Partial<
       Record<PartyId, { party: Party; percent: number; isLock: true }>
@@ -86,22 +108,24 @@ const prediction$ = mergeWithKey({
       { party: Party; percent: number; isLock?: false }
     >
     Object.values(provinceData).forEach((entry) => {
-      if (entry === partyData) return
-      const set = entry.isLock ? lockedParties : unlockedParties
+      if (entry.party.id === partyData.party.id) return
+      const set = locks[province].has(entry.party.id)
+        ? lockedParties
+        : unlockedParties
       set[entry.party.id] = entry
     })
 
     const unlockedValue = Object.values(unlockedParties)
       .map((x) => x!.percent)
-      .reduce(add)
+      .reduce(add, 0)
 
     const lockedValue = Object.values(lockedParties)
       .map((x) => x!.percent)
-      .reduce(add)
+      .reduce(add, 0)
 
     partyData.percent = Math.min(
-      Math.max(0, rawValue),
-      unlockedValue + partyData.percent,
+      Math.max(0.001, rawValue),
+      unlockedValue + partyData.percent - 0.001,
     )
 
     const remaining = 1 - lockedValue - partyData.percent
@@ -113,7 +137,7 @@ const prediction$ = mergeWithKey({
         [partyId]: partyData,
         ...mapRecord(unlockedParties, (x) => ({
           ...x,
-          percent: (x!.percent / unlockedValue) * remaining,
+          percent: remaining > 0 ? (x!.percent / unlockedValue) * remaining : 0,
         })),
       },
     }
@@ -124,15 +148,13 @@ const prediction$ = mergeWithKey({
         mapRecord(
           results,
           (d) =>
-            d.parties as Record<
-              PartyId,
-              { party: Party; percent: number; isLock?: boolean }
-            >,
+            d.parties as Record<PartyId, { party: Party; percent: number }>,
         ),
       ),
     ),
   ),
   connectPredictions(),
+  shareLatest(),
 )
 
 const resultPerProvince = (
@@ -147,7 +169,7 @@ const resultPerProvince = (
   const remainingVotes = participation.nVoters - totalEmittedVotes
   const remainingValid = Math.round(validPercent * remainingVotes)
 
-  const totalValid = remainingVotes + votes.partyVotes + votes.white
+  const totalValid = remainingValid + votes.partyVotes + votes.white
 
   let partyVotes = 0
   const parties = mapRecord(votes.parties, (x, partyId) => {
@@ -173,8 +195,11 @@ const resultPerProvince = (
   }
 }
 
-const predictionResults$ = votes$.pipe(
-  withLatestFrom(prediction$, participation$),
+const predictionResults$ = combineLatest([
+  votes$,
+  prediction$,
+  participation$,
+]).pipe(
   map(([pVotes, pPrediction, pParticipation]) =>
     mapRecord(pVotes, (votes, province) =>
       resultPerProvince(
@@ -194,3 +219,31 @@ const catPredictionResults$ = predictionResults$.pipe(
   shareLatest(),
 )
 catPredictionResults$.subscribe()
+
+export const [usePrediction] = bind(
+  (partyId: PartyId) =>
+    selectedProvince$.pipe(
+      switchMap((province) =>
+        province
+          ? prediction$.pipe(map((p) => p[province][partyId].percent))
+          : NEVER,
+      ),
+    ),
+  0,
+)
+
+export const getPredictionResultsByProvince = (province: Provinces | null) =>
+  province
+    ? predictionResults$.pipe(map((res) => res[province]))
+    : catPredictionResults$
+
+const [editParty$, onEditParty] = createListener<PartyId>()
+const [doneEditing$, onDoneEditing] = createListener()
+
+export { onEditParty, onDoneEditing }
+export const [useEditingParty, editingParty$] = bind(
+  merge(isResults$, selectedProvince$, doneEditing$).pipe(
+    switchMapTo(concat([null], editParty$)),
+  ),
+  null,
+)
