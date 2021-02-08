@@ -2,8 +2,7 @@ import { Party } from "api/parties"
 import { formatNumber, formatPercent } from "utils/formatters"
 import { Link } from "react-router-dom"
 import { getTextColor } from "utils/color"
-
-// const MAX_INPUT = 10_000
+import { ProgressBar } from "components/progressBar"
 
 export const PartyResult: React.FC<{
   party: Party
@@ -32,28 +31,11 @@ export const PartyResult: React.FC<{
         <div className="pl-2 antialiased font-medium flex-grow-0 ">
           {party.name}
         </div>
-        <div className="border-2 border-gray-700 border-l-0 -ml-0.5 rounded-r-md bg-gray-300 h-1 box-content flex-grow-0 relative">
-          <div
-            className="absolute h-full -top-0.5 border-l-0 border-r-0 border-2 border-gray-700 box-content"
-            style={{
-              backgroundColor: party.color,
-              width: percent * 100 + "%",
-            }}
-          ></div>
-          {/*
-          <input
-            type="range"
-            className={`absolute w-full h-full appearance-none bg-transparent top-0 outline-none${
-              editting ? "" : " hidden"
-            }`}
-            style={{ cursor: "col-resize" }}
-            min="0"
-            max={MAX_INPUT}
-            value={percent * MAX_INPUT}
-            onChange={(e) => onEdit(Number(e.target.value) / MAX_INPUT)}
-          />
-          */}
-        </div>
+        <ProgressBar
+          className="border-l-0 rounded-r-md -ml-0.5 flex-grow-0"
+          width={percent * 100}
+          color={party.color}
+        />
         <div className="pl-2 flex justify-between text-sm text-gray-600 flex-grow-0 pb-1">
           <span className="">{formatNumber(votes)}</span>
           <span className="">{formatPercent(percent)}</span>

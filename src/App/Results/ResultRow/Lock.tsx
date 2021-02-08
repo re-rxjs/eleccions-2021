@@ -9,7 +9,7 @@ export const Lock: React.FC<{ partyId: PartyId }> = ({ partyId }) => {
       onClick={() => {
         onToggleLock(partyId)
       }}
-      className={`w-5 mr-1 ${isVisible ? "" : "hidden"}`}
+      className={`w-6 ${isVisible ? "" : "hidden"}`}
     >
       {isLocked ? <LockClosed /> : <LockOpen />}
     </button>

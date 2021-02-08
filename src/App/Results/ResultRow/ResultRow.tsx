@@ -11,10 +11,10 @@ export const ResultRow: React.FC<{ partyId: PartyId }> = ({ partyId }) => {
   return (
     <Subscribe source$={result$(partyId)}>
       <li className="flex flex-wrap items-center">
-        <Lock partyId={partyId} />
         <Result partyId={partyId} />
         <Edit partyId={partyId} isEditing={isEditing} />
-        {isEditing ? <Form partyId={partyId} /> : null}
+        <Lock partyId={partyId} />
+        {isEditing ? <Form /> : null}
       </li>
     </Subscribe>
   )

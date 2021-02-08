@@ -5,15 +5,7 @@ import { Party, PartyId } from "api/parties"
 import { Provinces, sitsByProvince } from "api/provinces"
 import { Votes, votes$ } from "api/votes"
 import { selectedProvince$ } from "../AreaPicker"
-import {
-  combineLatest,
-  concat,
-  EMPTY,
-  merge,
-  NEVER,
-  Observable,
-  race,
-} from "rxjs"
+import { combineLatest, concat, EMPTY, merge, Observable, race } from "rxjs"
 import {
   filter,
   map,
@@ -31,13 +23,12 @@ import { mapRecord, recordFromEntries } from "utils/record-utils"
 import { mergeResults } from "./results"
 import { isResults$ } from "App/ResultsOrPrediction"
 
-const [predictionInput$, onPredictionChange] = createListener(
-  (partyId: PartyId, percent: number) => ({
+export const [predictionInput$, onPredictionChange] = createListener(
+  (partyId: PartyId, percent: string) => ({
     partyId,
     percent,
   }),
 )
-export { onPredictionChange }
 
 const [toggleLock$, onToggleLock] = createListener<PartyId>()
 export { onToggleLock }
@@ -50,7 +41,7 @@ const withDefaultStream$ = <T, TT>(default$: Observable<T>) =>
 const initialLocks = recordFromEntries(
   Object.values(Provinces).map((p) => [p, new Set<PartyId>()]),
 )
-const locks$ = selectedProvince$.pipe(
+export const locks$ = selectedProvince$.pipe(
   switchMap((province) =>
     province
       ? toggleLock$.pipe(map((partyId) => ({ partyId, province })))
@@ -83,8 +74,12 @@ const values$ = selectedProvince$.pipe(
   switchMap((province) =>
     province
       ? predictionInput$.pipe(
-          filter((x) => !Number.isNaN(x)),
-          map((prediction) => ({ ...prediction, province })),
+          map(({ partyId, percent }) => ({
+            partyId,
+            province,
+            percent: Number(percent) / 100,
+          })),
+          filter((x) => !Number.isNaN(x.percent)),
         )
       : EMPTY,
   ),
@@ -94,7 +89,7 @@ const [_predictions$, connectPredictions] = selfDependant<
   Record<Provinces, Record<PartyId, { party: Party; percent: number }>>
 >()
 
-const prediction$ = values$.pipe(
+export const prediction$ = values$.pipe(
   withLatestFrom(_predictions$, locks$),
   map(([{ province, partyId, percent: rawValue }, prev, locks]) => {
     const provinceData = prev[province]
@@ -124,23 +119,39 @@ const prediction$ = values$.pipe(
       .reduce(add, 0)
 
     partyData.percent = Math.min(
-      Math.max(0.001, rawValue),
-      unlockedValue + partyData.percent - 0.001,
+      Math.max(0, rawValue),
+      unlockedValue + partyData.percent - 0.01,
     )
 
     const remaining = 1 - lockedValue - partyData.percent
 
-    return {
-      ...prev,
-      [province]: {
-        ...lockedParties,
-        [partyId]: partyData,
-        ...mapRecord(unlockedParties, (x) => ({
-          ...x,
-          percent: remaining > 0 ? (x!.percent / unlockedValue) * remaining : 0,
-        })),
-      },
-    }
+    if (unlockedValue > 0)
+      return {
+        ...prev,
+        [province]: {
+          ...lockedParties,
+          [partyId]: partyData,
+          ...mapRecord(unlockedParties, (x) => ({
+            ...x,
+            percent: (x!.percent / unlockedValue) * remaining,
+          })),
+        },
+      }
+
+    const nToSplit = Object.keys(unlockedParties).length
+    return nToSplit > 0
+      ? {
+          ...prev,
+          [province]: {
+            ...lockedParties,
+            [partyId]: partyData,
+            ...mapRecord(unlockedParties, (x) => ({
+              ...x,
+              percent: remaining / nToSplit,
+            })),
+          },
+        }
+      : prev
   }),
   withDefaultStream$(
     votes$.pipe(
@@ -219,18 +230,6 @@ const catPredictionResults$ = predictionResults$.pipe(
   shareLatest(),
 )
 catPredictionResults$.subscribe()
-
-export const [usePrediction] = bind(
-  (partyId: PartyId) =>
-    selectedProvince$.pipe(
-      switchMap((province) =>
-        province
-          ? prediction$.pipe(map((p) => p[province][partyId].percent))
-          : NEVER,
-      ),
-    ),
-  0,
-)
 
 export const getPredictionResultsByProvince = (province: Provinces | null) =>
   province

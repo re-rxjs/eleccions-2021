@@ -5,6 +5,5 @@ export {
   useEditingParty,
   useIsLocked,
   onToggleLock,
-  usePrediction,
   onPredictionChange,
 } from "./predictions"

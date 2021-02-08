@@ -10,7 +10,7 @@ export const Edit: React.FC<{ partyId: PartyId; isEditing: boolean }> = ({
 
   return (
     <button
-      className={`w-5 ml-1 ${isVisible ? "" : "hidden"}`}
+      className={`w-6 mx-2 ${isVisible ? "" : "hidden"}`}
       onClick={onClick}
     >
       {isEditing ? <Check /> : <Pencil />}
