@@ -15,7 +15,7 @@ import { useLayoutEffect, useRef } from "react"
 import { withProvince } from "utils/withProvince"
 import { onPredictionChange } from "../state"
 
-const withEditingParty = <_, T>(source$: Observable<T>) =>
+const withEditingParty = <T extends {}>(source$: Observable<T>) =>
   editingParty$.pipe(
     switchMap((partyId) =>
       partyId ? source$.pipe(map((x) => [x, partyId] as const)) : NEVER,
