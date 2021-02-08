@@ -25,7 +25,7 @@ export const PartyResult: React.FC<{
     <div {...sitsElementProps} />
   )
   return (
-    <div className="flex-grow flex items-center my-2">
+    <div className="flex-grow flex items-center">
       {sitsElement}
       <div className="flex-grow flex flex-col h-14 justify-between">
         <div className="pl-2 antialiased font-medium flex-grow-0 ">

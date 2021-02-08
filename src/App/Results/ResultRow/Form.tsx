@@ -1,20 +1,21 @@
+import { combineLatest, concat, NEVER, Observable, of } from "rxjs"
+import { map, pluck, switchMap, take, withLatestFrom } from "rxjs/operators"
 import { bind, Subscribe } from "@react-rxjs/core"
-import { getParties } from "api/parties"
+import { getParties, PartyId } from "api/parties"
 import {
   editingParty$,
   locks$,
   onDoneEditing,
   prediction$,
   predictionInput$,
+  useEditingParty,
 } from "App/Results/state/predictions"
 import { ProgressBar } from "components/progressBar"
 import { useLayoutEffect, useRef } from "react"
-import { combineLatest, concat, NEVER, Observable, of } from "rxjs"
-import { map, pluck, switchMap, take, withLatestFrom } from "rxjs/operators"
 import { withProvince } from "utils/withProvince"
 import { onPredictionChange } from "../state"
 
-const withEditingParty = <T extends {}>(source$: Observable<T>) =>
+const withEditingParty = <_, T>(source$: Observable<T>) =>
   editingParty$.pipe(
     switchMap((partyId) =>
       partyId ? source$.pipe(map((x) => [x, partyId] as const)) : NEVER,
@@ -66,40 +67,51 @@ const value$ = concat(
 const party$ = withEditingParty(of(getParties())).pipe(map(([p, k]) => p[k]))
 
 const [useFormData, formData$] = bind(combineLatest([value$, party$]))
+function onDone(e: KeyboardEvent | React.KeyboardEvent<any>) {
+  if (e.key === "Escape" || e.key === "Enter") {
+    onDoneEditing()
+  }
+}
 
 const FormBase: React.FC = () => {
   const [value, party] = useFormData()
-  const rangeRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   useLayoutEffect(() => {
-    rangeRef.current!.focus()
+    inputRef.current!.focus()
     function onClickDocument(e: MouseEvent) {
-      if (e.target !== rangeRef.current && e.target !== inputRef.current) {
+      if (!formRef.current!.contains(e.target as any)) {
         onDoneEditing()
       }
     }
     setTimeout(() => {
       document.addEventListener("click", onClickDocument)
+      document.addEventListener("keydown", onDone)
     }, 0)
     return () => {
       document.removeEventListener("click", onClickDocument)
+      document.removeEventListener("keydown", onDone)
     }
   }, [])
   return (
     <form
+      ref={formRef}
       onSubmit={(e) => {
         e.preventDefault()
         onDoneEditing()
       }}
-      className="w-full pl-12 flex items-center"
+      className="w-full pl-12 flex flex-wrap mt-2 pr-16 mr-0.5 justify-center"
     >
+      <label className="w-full flex-grow" htmlFor="prediccio-text">
+        Quin percentatge dels vots no escrutats creus que s'endurà {party.name}?
+      </label>
       <ProgressBar
-        className="rounded-md ml-0.5 w-full flex-grow"
+        className="rounded-md my-2 w-full flex-grow"
         width={value}
         color={party.color}
       >
         <input
-          ref={rangeRef}
+          name="prediccio-barra"
           type="range"
           className={`absolute w-full h-full appearance-none bg-transparent top-0 outline-none`}
           style={{ cursor: "col-resize" }}
@@ -110,24 +122,31 @@ const FormBase: React.FC = () => {
           onChange={(e) => onPredictionChange(party.id, e.target.value)}
         />
       </ProgressBar>
-      <input
-        ref={inputRef}
-        className="ml-2 flex-grow-0 w-14"
-        type="number"
-        min={0}
-        max={100}
-        step={0.01}
-        value={value}
-        onChange={(e) => {
-          onPredictionChange(party.id, e.target.value)
-        }}
-      />
+      <p className="flex-grow-0">
+        <input
+          ref={inputRef}
+          className="w-14 bg-gray-100"
+          type="number"
+          name="prediccio-text"
+          min={0}
+          max={100}
+          step={0.01}
+          value={value}
+          onChange={(e) => {
+            onPredictionChange(party.id, e.target.value)
+          }}
+        />
+        %
+      </p>
     </form>
   )
 }
 
-export const Form: React.FC = () => (
-  <Subscribe source$={formData$}>
-    <FormBase />
-  </Subscribe>
-)
+const Form: React.FC<{ partyId: PartyId }> = ({ partyId }) =>
+  useEditingParty() === partyId ? (
+    <Subscribe source$={formData$}>
+      <FormBase />
+    </Subscribe>
+  ) : null
+
+export default Form
