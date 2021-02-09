@@ -6,13 +6,13 @@ import { changeProvince, selectedProvince$ } from "./AreaPicker.state"
 
 export const AreaPicker = () => {
   return (
-    <div className="flex flex-col gap-1 max-w-sm m-auto mb-4">
-      <ProvinceButton province={null} />
-      <div className="grid grid-cols-2 gap-1">
-        <ProvinceButton province={Provinces.BCN} />
-        <ProvinceButton province={Provinces.GIR} />
-        <ProvinceButton province={Provinces.LLE} />
-        <ProvinceButton province={Provinces.TAR} />
+    <div className="flex py-2 justify-center">
+      <Button province={null} className="mr-2" />
+      <div className="flex divide-x divide-white">
+        <Button province={Provinces.BCN} />
+        <Button province={Provinces.GIR} />
+        <Button province={Provinces.LLE} />
+        <Button province={Provinces.TAR} />
       </div>
     </div>
   )
@@ -23,17 +23,19 @@ const [useIsSelected] = bind(
     selectedProvince$.pipe(map((selected) => selected === province)),
   false,
 )
-const ProvinceButton: FC<{ province: Provinces | null }> = ({ province }) => {
+const Button: FC<{ province: Provinces | null; className?: string }> = ({
+  province,
+  className = "",
+}) => {
   const isSelected = useIsSelected(province)
-
   return (
-    <div
-      className={`text-center p-2 rounded font-bold ${
+    <button
+      className={`text-center p-2 font-bold ${
         isSelected ? "bg-indigo-400" : "bg-indigo-200"
-      } cursor-pointer`}
+      } ${className}`}
       onClick={() => changeProvince(province)}
     >
       {province || "Catalunya"}
-    </div>
+    </button>
   )
 }

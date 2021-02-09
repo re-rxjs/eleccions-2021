@@ -6,7 +6,7 @@ import { useOrder, order$ } from "./state"
 const Parties: React.FC = () => {
   const partyIds = useOrder()
   return (
-    <ul className="foo px-3 divide-y divide-gray-200">
+    <ul className="foo divide-y divide-gray-200">
       {partyIds.map((partyId) => (
         <ResultRow key={partyId} partyId={partyId} />
       ))}

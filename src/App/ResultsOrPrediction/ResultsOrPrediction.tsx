@@ -17,7 +17,7 @@ const Button: React.FC<{ isSelected: boolean; onClick: () => void }> = ({
 }) => (
   <button
     onClick={onClick}
-    className={`w-full block px-4 py-2 rounded-md ${
+    className={`w-full block px-4 py-1 rounded-none ${
       isSelected ? "bg-red-100 text-red-700" : ""
     }`}
   >
@@ -29,8 +29,8 @@ export const ResultsOrPrediction: React.FC = ({ children }) => {
   const isResults = useIsResults()
   return (
     <div className="divide-y divide-gray-200">
-      <nav className="p-4">
-        <ul className="flex space-x-2">
+      <nav>
+        <ul className="flex">
           <li className="flex-grow">
             <Button onClick={onSelectResults} isSelected={isResults}>
               Resultats
@@ -43,7 +43,7 @@ export const ResultsOrPrediction: React.FC = ({ children }) => {
           </li>
         </ul>
       </nav>
-      <div className="py-4">{children}</div>
+      {children}
     </div>
   )
 }

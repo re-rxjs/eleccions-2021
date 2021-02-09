@@ -14,7 +14,7 @@ export const ResultRow: React.FC<{ partyId: PartyId }> = ({ partyId }) => {
     : ""
   return (
     <Subscribe source$={result$(partyId)}>
-      <li className={"flex flex-wrap items-center py-3" + editingStyles}>
+      <li className={"flex flex-wrap items-center p-3" + editingStyles}>
         <Result partyId={partyId} />
         <Edit partyId={partyId} isEditing={isEditing} />
         <Lock partyId={partyId} />
