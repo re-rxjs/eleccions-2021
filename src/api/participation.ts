@@ -1,4 +1,4 @@
-import { bind } from "@react-rxjs/core"
+import { bind, shareLatest } from "@react-rxjs/core"
 import { Observable } from "rxjs"
 import { map, pluck } from "rxjs/operators"
 import { recordEntries, recordFromEntries } from "utils/record-utils"
@@ -27,6 +27,7 @@ export const participation$: Observable<
       ]),
     ),
   ),
+  shareLatest()
 )
 
 export const [useParticipation, getParticipation$] = bind(

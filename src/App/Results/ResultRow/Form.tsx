@@ -1,10 +1,11 @@
-import { combineLatest, concat, NEVER, Observable, of } from "rxjs"
-import { map, pluck, switchMap, take, withLatestFrom } from "rxjs/operators"
+import { combineLatest, concat } from "rxjs"
+import { map, take, withLatestFrom } from "rxjs/operators"
 import { bind, Subscribe } from "@react-rxjs/core"
 import { getParties, PartyId } from "api/parties"
 import {
-  editingParty$,
-  locks$,
+  currentParty$,
+  minMax$,
+  multipliers$,
   onDoneEditing,
   prediction$,
   predictionInput$,
@@ -12,65 +13,51 @@ import {
 } from "App/Results/state/predictions"
 import { ProgressBar } from "components/progressBar"
 import { useLayoutEffect, useRef } from "react"
-import { withProvince } from "utils/withProvince"
-import { onPredictionChange } from "../state"
-
-const withEditingParty = <T extends {}>(source$: Observable<T>) =>
-  editingParty$.pipe(
-    switchMap((partyId) =>
-      partyId ? source$.pipe(map((x) => [x, partyId] as const)) : NEVER,
-    ),
-  )
-
-export const minMax$ = withEditingParty(
-  withProvince(locks$.pipe(withLatestFrom(prediction$))),
-).pipe(
-  map(([[[locks, predictions], province], partyId]) => {
-    const prediction = predictions[province]
-
-    let nUnlocked = Object.keys(prediction).length - locks[province].size
-    if (!locks[province].has(partyId)) nUnlocked--
-    if (nUnlocked === 0) {
-      const val = prediction[partyId].percent * 100
-      return { min: val, max: val }
-    }
-
-    let available = 1
-    locks[province].forEach((id) => {
-      if (id !== partyId) {
-        available -= prediction[id].percent
-      }
-    })
-    return { min: 0, max: Math.min(0.99, available) * 100 }
-  }),
-)
+import { onPredictionChange, setIsManipulatinBar } from "../state"
+import { selectedProvince$ } from "../AreaPicker"
+import { recordEntries } from "utils/record-utils"
+import { add } from "utils/add"
 
 const value$ = concat(
-  withEditingParty(withProvince(prediction$)).pipe(
-    map(([[p, province], partyId]) =>
-      (p[province][partyId].percent * 100).toFixed(2),
-    ),
+  combineLatest([selectedProvince$, prediction$, currentParty$]).pipe(
+    withLatestFrom(multipliers$),
     take(1),
+    map(([[province, predictions, partyId], multipliers]) => {
+      const res = province
+        ? predictions[province][partyId]
+        : recordEntries(predictions)
+            .map(([province, x]) =>
+              multipliers.provinceToGeneral(x[partyId], province),
+            )
+            .reduce(add)
+      return (res * 100).toFixed(2)
+    }),
   ),
   predictionInput$.pipe(
-    pluck("percent"),
     withLatestFrom(minMax$),
     map(([x, { min, max }]) => {
       const value = Number(x)
       if (Number.isNaN(value)) return x
-      const finalValue = Math.max(min, Math.min(value, max))
+      const finalValue = Math.max(min * 100, Math.min(value, max * 100))
       return finalValue === value ? x : finalValue.toFixed(2)
     }),
   ),
 )
 
-const party$ = withEditingParty(of(getParties())).pipe(map(([p, k]) => p[k]))
+const parties = getParties()
+const party$ = currentParty$.pipe(map((key) => parties[key]))
 
 const [useFormData, formData$] = bind(combineLatest([value$, party$]))
 function onDone(e: KeyboardEvent | React.KeyboardEvent<any>) {
   if (e.key === "Escape" || e.key === "Enter") {
     onDoneEditing()
   }
+}
+const startManipulating = () => {
+  setIsManipulatinBar(true)
+}
+const stopManipulating = () => {
+  setIsManipulatinBar(false)
 }
 
 const FormBase: React.FC = () => {
@@ -119,7 +106,11 @@ const FormBase: React.FC = () => {
           max={100}
           step={0.01}
           value={value}
-          onChange={(e) => onPredictionChange(party.id, e.target.value)}
+          onMouseDown={startManipulating}
+          onTouchStart={startManipulating}
+          onTouchEnd={stopManipulating}
+          onMouseUp={stopManipulating}
+          onChange={(e) => onPredictionChange(e.target.value)}
         />
       </ProgressBar>
       <p className="flex-grow-0">
@@ -133,7 +124,7 @@ const FormBase: React.FC = () => {
           step={0.01}
           value={value}
           onChange={(e) => {
-            onPredictionChange(party.id, e.target.value)
+            onPredictionChange(e.target.value)
           }}
         />
         %

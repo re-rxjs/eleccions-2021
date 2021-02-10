@@ -1,11 +1,12 @@
 import { bind, shareLatest } from "@react-rxjs/core"
+import { createListener } from "@react-rxjs/utils"
 import { PartyId } from "api/parties"
 import { Provinces } from "api/provinces"
 import { isResults$ } from "App/ResultsOrPrediction"
-import { combineLatest, NEVER } from "rxjs"
-import { map, switchMap } from "rxjs/operators"
+import { NEVER } from "rxjs"
+import { map, startWith, switchMap } from "rxjs/operators"
 import { selectedProvince$ } from "../AreaPicker"
-import { getPredictionResultsByProvince, editingParty$ } from "./predictions"
+import { getPredictionResultsByProvince } from "./predictions"
 import { getResultsByProvince, PartyResults } from "./results"
 
 export const getCurrentResults = (province: Provinces | null) =>
@@ -17,7 +18,7 @@ export const getCurrentResults = (province: Provinces | null) =>
     ),
   )
 
-export const currentResults$ = selectedProvince$.pipe(
+const currentResults$ = selectedProvince$.pipe(
   switchMap(getCurrentResults),
   shareLatest(),
 )
@@ -31,8 +32,16 @@ const actualOrder$ = currentResults$.pipe(
   ),
 )
 
+const [isManipulatingBar$, setIsManipulatinBar] = createListener<boolean>()
+export { setIsManipulatinBar }
+
 export const [useOrder, order$] = bind(
-  editingParty$.pipe(switchMap((party) => (party ? NEVER : actualOrder$))),
+  isManipulatingBar$.pipe(
+    startWith(false),
+    switchMap((isManipulatingBar) =>
+      isManipulatingBar ? NEVER : actualOrder$,
+    ),
+  ),
 )
 
 export const [usePartyResult, getPartyResult$] = bind((id: PartyId) =>
@@ -40,8 +49,6 @@ export const [usePartyResult, getPartyResult$] = bind((id: PartyId) =>
 )
 
 export const [useIsEditing] = bind(
-  combineLatest([isResults$, selectedProvince$]).pipe(
-    map(([isResults, province]) => !isResults && !!province),
-  ),
+  isResults$.pipe(map((isResults) => !isResults)),
   false,
 )
